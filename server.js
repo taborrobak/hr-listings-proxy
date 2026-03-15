@@ -40,7 +40,9 @@ async function fetchAllListings() {
     let next = null;
     let pages = 0;
     do {
-      const params = new URLSearchParams({ limit: '100' });
+      const params = new URLSearchParams({ limit: '50' });
+      // Small delay between pages to avoid rate limiting
+      if (pages > 0) await new Promise(r => setTimeout(r, 2000));
       if (next) params.set('next', next);
       const url = `https://api.opensea.io/api/v2/listings/collection/${COLLECTION_SLUG}/all?${params}`;
 
@@ -168,7 +170,9 @@ server.listen(PORT, () => {
   console.log(`Listings proxy running on :${PORT}`);
   console.log(`Collection: ${COLLECTION_SLUG}`);
   console.log(`Poll interval: ${POLL_INTERVAL}ms`);
-  // Fetch immediately, then poll
-  fetchAllListings();
-  setInterval(fetchAllListings, POLL_INTERVAL);
+  // Delay first fetch slightly to let server stabilize
+  setTimeout(() => {
+    fetchAllListings();
+    setInterval(fetchAllListings, POLL_INTERVAL);
+  }, 5000);
 });

@@ -35,28 +35,32 @@ async function fetchAllListings() {
   if (fetchInProgress) return;
   fetchInProgress = true;
   const start = Date.now();
+  const MAX_TOTAL_MS = 120000; // Abort entire fetch after 2 minutes
   try {
     const listings = [];
     let next = null;
     let pages = 0;
     do {
+      if (Date.now() - start > MAX_TOTAL_MS) {
+        throw new Error(`Fetch timed out after ${Math.round((Date.now() - start) / 1000)}s (${pages} pages)`);
+      }
       const params = new URLSearchParams({ limit: '50' });
       // Small delay between pages to avoid rate limiting
-      if (pages > 0) await new Promise(r => setTimeout(r, 2000));
+      if (pages > 0) await new Promise(r => setTimeout(r, 1000));
       if (next) params.set('next', next);
       const url = `https://api.opensea.io/api/v2/listings/collection/${COLLECTION_SLUG}/all?${params}`;
 
       let res;
-      // Retry on 429 with backoff
-      for (let attempt = 0; attempt < 6; attempt++) {
+      // Retry on 429 with backoff (max 3 attempts, fail fast)
+      for (let attempt = 0; attempt < 3; attempt++) {
         res = await httpsGet(url, {
           'x-api-key': OPENSEA_API_KEY,
           'Accept': 'application/json',
           'User-Agent': 'hr-listings-proxy/1.0',
         });
         if (res.status === 429) {
-          const wait = (attempt + 1) * 10000;
-          console.warn(`429 rate-limited, waiting ${wait}ms (attempt ${attempt + 1}/6)`);
+          const wait = (attempt + 1) * 5000;
+          console.warn(`429 rate-limited, waiting ${wait}ms (attempt ${attempt + 1}/3) [page ${pages}]`);
           await new Promise(r => setTimeout(r, wait));
           continue;
         }
@@ -64,7 +68,7 @@ async function fetchAllListings() {
       }
 
       if (res.status !== 200) {
-        throw new Error(`OpenSea returned ${res.status}: ${res.body.substring(0, 200)}`);
+        throw new Error(`OpenSea returned ${res.status} on page ${pages}: ${res.body.substring(0, 200)}`);
       }
 
       const data = JSON.parse(res.body);
@@ -171,6 +175,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`Listings proxy running on :${PORT}`);
   console.log(`Collection: ${COLLECTION_SLUG}`);
+  console.log(`API key: ${OPENSEA_API_KEY.substring(0, 6)}...`);
   console.log(`Poll interval: ${POLL_INTERVAL}ms`);
   // Delay first fetch slightly to let server stabilize
   setTimeout(() => {

@@ -1,0 +1,12 @@
+{
+  "name": "hr-listings-proxy",
+  "version": "1.0.0",
+  "description": "OpenSea listings cache proxy for Human Resources collection viewer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

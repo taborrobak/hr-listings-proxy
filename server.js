@@ -7,7 +7,7 @@ const https = require('https');
 
 // --- Config ---
 const PORT = process.env.PORT || 3001;
-const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY || '48b71b05d5624ce0bcc06ba19ad0bdbb';
+const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY || '7a6658d641d24c2587dd5562afe2d193';
 const COLLECTION_SLUG = process.env.COLLECTION_SLUG || 'humanresources';
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL || '60000', 10); // 60s default
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*').split(',').map(s => s.trim());

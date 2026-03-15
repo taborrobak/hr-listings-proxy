@@ -46,11 +46,15 @@ async function fetchAllListings() {
 
       let res;
       // Retry on 429 with backoff
-      for (let attempt = 0; attempt < 4; attempt++) {
-        res = await httpsGet(url, { 'x-api-key': OPENSEA_API_KEY });
+      for (let attempt = 0; attempt < 6; attempt++) {
+        res = await httpsGet(url, {
+          'x-api-key': OPENSEA_API_KEY,
+          'Accept': 'application/json',
+          'User-Agent': 'hr-listings-proxy/1.0',
+        });
         if (res.status === 429) {
-          const wait = (attempt + 1) * 5000;
-          console.warn(`429 rate-limited, waiting ${wait}ms (attempt ${attempt + 1}/4)`);
+          const wait = (attempt + 1) * 10000;
+          console.warn(`429 rate-limited, waiting ${wait}ms (attempt ${attempt + 1}/6)`);
           await new Promise(r => setTimeout(r, wait));
           continue;
         }

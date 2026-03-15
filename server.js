@@ -158,6 +158,8 @@ const server = http.createServer((req, res) => {
       listings: cachedListings.length,
       lastFetch,
       lastError,
+      fetchInProgress,
+      uptime: process.uptime(),
     }));
     return;
   }
